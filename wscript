@@ -14,6 +14,9 @@ def configure(ctx):
     ctx.load("hep-waftools-base")
     ctx.load("find_root")
     ctx.find_root()
+
+    # register this module for export
+    ctx.hwaf_export_module("wscript")
     return
 
 def build(ctx):
