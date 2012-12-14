@@ -52,3 +52,16 @@ TaskGen.declare_chain(
     ext_out='.cxx',
     reentrant = False,
     )
+
+### ---------------------------------------------------------------------------
+from waflib.TaskGen import feature, before_method
+@feature('*')
+@before_method('process_source')
+def insert_project_level_pythonpath(self):
+    '''
+    insert_project_level_pythonpath adds ${INSTALL_AREA}/python into the
+    ${PYTHONPATH} environment variable.
+    '''
+    pydir = waflib.Utils.subst_vars('${INSTALL_AREA}/python', self.env)
+    self.env.prepend_value('PYTHONPATH', pydir)
+    return
