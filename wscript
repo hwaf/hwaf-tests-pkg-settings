@@ -7,12 +7,15 @@ def pkg_deps(ctx):
 
 def options(ctx):
     ctx.load("hep-waftools-base")
+    ctx.load("find_python")
     ctx.load("find_root")
     return
 
 def configure(ctx):
     ctx.load("hep-waftools-base")
+    ctx.load("find_python")
     ctx.load("find_root")
+    ctx.find_python()
     ctx.find_root()
 
     # register this module for export
