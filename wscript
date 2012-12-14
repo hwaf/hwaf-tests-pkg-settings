@@ -56,7 +56,7 @@ TaskGen.declare_chain(
 ### ---------------------------------------------------------------------------
 import waflib.Utils
 from waflib.TaskGen import feature, before_method, after_method
-@feature('hepwaf_runtime_tsk')
+@feature('hepwaf_runtime_tsk', '*')
 @before_method('process_rule')
 def insert_project_level_pythonpath(self):
     '''
