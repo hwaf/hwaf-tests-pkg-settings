@@ -65,7 +65,9 @@ def insert_project_level_pythonpath(self):
     '''
     msg.info("^"*80)
     #pydir = waflib.Utils.subst_vars('${INSTALL_AREA}/python', self.env)
-    pydir = self.hepwaf_get_install_path('${INSTALL_AREA}/python')
+    _get = getattr(self, 'hepwaf_get_install_path', None)
+    if not _get: _get = getattr(self.bld, 'hepwaf_get_install_path')
+    pydir = _get('${INSTALL_AREA}/python')
     msg.info("inserting [%s]..." % pydir)
     self.env.prepend_value('PYTHONPATH', pydir)
     msg.info("==> %s" % self.env.PYTHONPATH)
