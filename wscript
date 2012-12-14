@@ -54,6 +54,7 @@ TaskGen.declare_chain(
     )
 
 ### ---------------------------------------------------------------------------
+import waflib.Utils
 from waflib.TaskGen import feature, before_method
 @feature('*')
 @before_method('process_source')
