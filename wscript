@@ -23,7 +23,7 @@ def configure(ctx):
 
     # declare a runtime env. var.
     ctx.env.JOBOPTPATH = []
-    ctx.declare_runtime_envvar("JOBOPTPATH")
+    ctx.declare_runtime_env("JOBOPTPATH")
     return
 
 def build(ctx):
