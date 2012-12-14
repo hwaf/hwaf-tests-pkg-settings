@@ -63,6 +63,9 @@ def insert_project_level_pythonpath(self):
     insert_project_level_pythonpath adds ${INSTALL_AREA}/python into the
     ${PYTHONPATH} environment variable.
     '''
+    msg.info("^"*80)
     pydir = waflib.Utils.subst_vars('${INSTALL_AREA}/python', self.env)
+    msg.info("inserting [%s]..." % pydir)
     self.env.prepend_value('PYTHONPATH', pydir)
+    msg.info("==> %s" % self.env.PYTHONPATH)
     return
