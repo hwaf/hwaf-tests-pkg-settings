@@ -20,6 +20,10 @@ def configure(ctx):
 
     # register this module for export
     ctx.hwaf_export_module("wscript")
+
+    # declare a runtime env. var.
+    ctx.env.JOBOPTPATH = []
+    ctx.declare_runtime_envvar("JOBOPTPATH")
     return
 
 def build(ctx):
@@ -69,4 +73,17 @@ def insert_project_level_pythonpath(self):
     #msg.info("inserting [%s]..." % pydir)
     self.env.prepend_value('PYTHONPATH', pydir)
     #msg.info("==> %s" % self.env.PYTHONPATH)
+    return
+
+@feature('hepwaf_runtime_tsk', '*')
+@before_method('process_rule')
+def insert_project_level_joboptpath(self):
+    '''
+    insert_project_level_pythonpath adds ${INSTALL_AREA}/share into the
+    ${JOBOPTPATH} environment variable.
+    '''
+    _get = getattr(self, 'hepwaf_get_install_path', None)
+    if not _get: _get = getattr(self.bld, 'hepwaf_get_install_path')
+    pydir = _get('${INSTALL_AREA}/share')
+    self.env.prepend_value('JOBOPTPATH', pydir)
     return
