@@ -87,3 +87,144 @@ def insert_project_level_joboptpath(self):
     pydir = _get('${INSTALL_AREA}/share')
     self.env.prepend_value('JOBOPTPATH', pydir)
     return
+
+### -----------------------------------------------------------------------------
+def install_headers(self, incdir=None, relative_trick=True, cwd=None):
+    
+    # extract package name
+    PACKAGE_NAME = self._get_pkg_name()
+    inc_node = None
+    if not incdir:
+        inc_node = self.path.find_dir(PACKAGE_NAME)
+        if not inc_node:
+            return
+    else:
+        if isinstance(incdir, str):
+            inc_node = self.path.find_dir(incdir)
+        else:
+            inc_node = incdir
+            pass
+        pass
+    
+    if isinstance(cwd, str):
+        cwd = self.path.find_dir(cwd)
+        
+    if not inc_node:
+        self.fatal('no such directory [%s] (pkg=%s)' % (incdir, PACKAGE_NAME))
+        pass
+    
+    includes = inc_node.ant_glob('**/*', dir=False)
+    self.install_files(
+        '${INSTALL_AREA}/include', includes, 
+        relative_trick=relative_trick,
+        cwd=cwd,
+        postpone=False,
+        )
+
+    incpath = waflib.Utils.subst_vars('${INSTALL_AREA}/include',self.env)
+    #msg.info("--> [%s] %s" %(PACKAGE_NAME,incpath))
+    self.env.append_unique('INCLUDES_%s' % PACKAGE_NAME,
+                           [incpath,inc_node.parent.abspath()])
+    #inc_node.parent.abspath())
+    return
+    
+### ---------------------------------------------------------------------------
+def build_linklib(self, name, source, **kw):
+
+    #msg.info('=========== %s ============' % name)
+    # extract package name
+    PACKAGE_NAME = self._get_pkg_name()
+
+    kw = dict(kw)
+    linkflags = kw.get('linkflags', [])
+    linkflags = self.env.SHLINKFLAGS + linkflags
+    kw['linkflags'] = linkflags
+    
+    src_node = self.path.find_dir('src')
+
+    srcs = self.path.ant_glob(source)
+    if (not srcs) and src_node:
+        # hack to mimick CMT's default (to take sources from src)
+        srcs = src_node.ant_glob(source)
+        pass
+    if not srcs:
+        self.fatal("could not infer sources from %r" % source)
+        pass
+    includes = kw.get('includes', [])
+    includes.insert(0, self.path.abspath())
+    #includes.insert(1, self.path.abspath()+'/'+PACKAGE_NAME)
+    kw['includes'] = includes + [src_node]
+
+    export_incs = None
+    kw['export_includes'] = waflib.Utils.to_list(
+        kw.get('export_includes', [])
+        )[:]
+    if not kw['export_includes']:
+        inc_node = self.path.find_dir(PACKAGE_NAME)
+        if inc_node:
+            export_incs = '.'
+            kw['export_includes'].append(export_incs)
+        inc_node = self.path.find_dir('inc/%s' % PACKAGE_NAME)
+        if inc_node:
+            export_incs = 'inc'
+            kw['export_includes'].append(export_incs)
+            #self.fatal('%s: export_includes - inc' % name)
+        else:
+            #self.fatal('%s: could not find [inc/%s] !!' % (name,PACKAGE_NAME))
+            pass
+    else:
+        export_incs = kw['export_includes']
+        #msg.info('%s: exports: %r' % (name, kw['export_includes']))
+        pass
+
+    kw['includes'].extend(kw['export_includes'])
+    
+    kw['use'] = waflib.Utils.to_list(kw.get('use', [])) + ['dl']
+    
+    defines = kw.get('defines', [])
+    _defines = []
+    for d in self.env.CPPFLAGS:
+        if d.startswith('-D'):
+            _defines.append(d[len('-D'):])
+        else:
+            _defines.append(d)
+    defines = _defines + defines
+    kw['defines'] = defines + self._get_pkg_version_defines()
+
+    #msg.info ("==> build_linklib(%s, '%s', %r)..." % (name, source, kw))
+    o = self(
+        features        = 'cxx cxxshlib symlink_tsk',
+        name            = name,
+        source          = srcs,
+        target          = name,
+        install_path    = '${INSTALL_AREA}/lib',
+        #export_includes = ['.', './'+PACKAGE_NAME],
+        #export_includes = export_,
+        libpath = self.env.LD_LIBRARY_PATH + [self.path.get_bld().abspath()],
+        #libpath         = self.env.LD_LIBRARY_PATH,
+        **kw
+        )
+    # for use-exports
+    # FIXME: also propagate uses ?
+    self.env['LIB_%s' % name] = [name]
+    self.env.append_unique('LIBPATH_%s'%name, self.path.get_bld().abspath())
+    #msg.info('--> libpath[%s]: %s' % (name, self.env['LIBPATH_%s'%name]))
+    #msg.info('--> incpath[%s]: %s' % (name, export_incs))
+
+    if export_incs:
+        export_incs = waflib.Utils.to_list(export_incs)[0]
+        if export_incs == '.':
+            self.install_headers()
+        elif export_incs == 'inc':
+            incdir = self.path.find_dir('inc')
+            hdrdir = 'inc/%s' % PACKAGE_NAME
+            self.install_headers(hdrdir, cwd=incdir)
+        else:
+            pass
+
+    #o.post()
+    return o
+import waflib.Build
+waflib.Build.BuildContext.build_linklib = build_linklib
+waflib.Build.BuildContext.install_headers = install_headers
+### ---------------------------------------------------------------------------
