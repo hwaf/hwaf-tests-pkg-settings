@@ -60,30 +60,30 @@ TaskGen.declare_chain(
 ### ---------------------------------------------------------------------------
 import waflib.Utils
 from waflib.TaskGen import feature, before_method, after_method
-@feature('hepwaf_runtime_tsk', '*')
+@feature('hwaf_runtime_tsk', '*')
 @before_method('process_rule')
 def insert_project_level_pythonpath(self):
     '''
     insert_project_level_pythonpath adds ${INSTALL_AREA}/python into the
     ${PYTHONPATH} environment variable.
     '''
-    _get = getattr(self, 'hepwaf_get_install_path', None)
-    if not _get: _get = getattr(self.bld, 'hepwaf_get_install_path')
+    _get = getattr(self, 'hwaf_get_install_path', None)
+    if not _get: _get = getattr(self.bld, 'hwaf_get_install_path')
     pydir = _get('${INSTALL_AREA}/python')
     #msg.info("inserting [%s]..." % pydir)
     self.env.prepend_value('PYTHONPATH', pydir)
     #msg.info("==> %s" % self.env.PYTHONPATH)
     return
 
-@feature('hepwaf_runtime_tsk', '*')
+@feature('hwaf_runtime_tsk', '*')
 @before_method('process_rule')
 def insert_project_level_joboptpath(self):
     '''
     insert_project_level_pythonpath adds ${INSTALL_AREA}/share into the
     ${JOBOPTPATH} environment variable.
     '''
-    _get = getattr(self, 'hepwaf_get_install_path', None)
-    if not _get: _get = getattr(self.bld, 'hepwaf_get_install_path')
+    _get = getattr(self, 'hwaf_get_install_path', None)
+    if not _get: _get = getattr(self.bld, 'hwaf_get_install_path')
     pydir = _get('${INSTALL_AREA}/share')
     self.env.prepend_value('JOBOPTPATH', pydir)
     return
