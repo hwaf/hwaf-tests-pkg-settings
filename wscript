@@ -6,13 +6,13 @@ def pkg_deps(ctx):
     return
 
 def options(ctx):
-    ctx.load("hep-waftools-base")
+    ctx.load("hwaf-base")
     ctx.load("find_python")
     ctx.load("find_root")
     return
 
 def configure(ctx):
-    ctx.load("hep-waftools-base")
+    ctx.load("hwaf-base")
     ctx.load("find_python")
     ctx.load("find_root")
     ctx.find_python()
