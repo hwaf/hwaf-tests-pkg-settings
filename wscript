@@ -170,6 +170,74 @@ def install_headers(self, incdir=None, relative_trick=True, cwd=None):
     #inc_node.parent.abspath())
     return
     
+def _get_pkg_name(self):
+    # FIXME: should this be more explicit ?
+    pkg_name = self.path.name
+    return pkg_name
+
+def _get_pkg_version_defines(self):
+    pkg_name = _get_pkg_name(self)
+    pkg_vers = "%s-XX-XX-XX" % pkg_name
+    pkg_defines = ['PACKAGE_VERSION="%s"' % pkg_vers,
+                   'PACKAGE_VERSION_UQ=%s'% pkg_vers]
+    cmt_dir_node = self.path.get_src().find_dir('cmt')
+    if not cmt_dir_node:
+        return pkg_defines
+    version_cmt = cmt_dir_node.find_resource('version.cmt')
+    if not version_cmt:
+        return pkg_defines
+    pkg_vers = version_cmt.read().strip()
+    pkg_defines = ['PACKAGE_VERSION="%s"' % pkg_vers,
+                   'PACKAGE_VERSION_UQ=%s'% pkg_vers]
+    #msg.debug("*** %s %r" % (pkg_name, pkg_vers))
+    return pkg_defines
+
+### ---------------------------------------------------------------------------
+def build_app(self, name, source, **kw):
+    kw = dict(kw)
+
+    # FIXME: hack !!! cppunit doesn't propagate correctly...
+    do_test = kw.get('do_test', False)
+    if do_test:
+        return
+
+    kw['features'] = waflib.Utils.to_list(
+        kw.get('features', 'cxx cxxprogram')) + [
+        'symlink_tsk',
+        ]
+    
+    kw['use'] = waflib.Utils.to_list(kw.get('use', []))
+
+    pkg_node = self.path.get_src()
+    src_node = self.path.find_dir('src')
+
+    srcs = self._cmt_get_srcs_lst(source)
+    linkflags = waflib.Utils.to_list(kw.get('linkflags', []))
+    linkflags = self.env.SHLINKFLAGS + linkflags
+    kw['linkflags'] = linkflags
+
+    defines = waflib.Utils.to_list(kw.get('defines', []))
+    kw['defines'] = defines + _get_pkg_version_defines(self)
+    
+    includes = waflib.Utils.to_list(kw.get('includes', []))
+    includes.insert(0, self.path.abspath())
+    #includes.insert(1, self.path.abspath()+'/'+PACKAGE_NAME)
+    kw['includes'] = includes + [src_node]
+
+    # extract package name
+    PACKAGE_NAME = _get_pkg_name(self)
+
+    exe = self(
+        name=name,
+        source=srcs,
+        target=name+'.exe',
+        install_path='${INSTALL_AREA}/bin',
+        libpath = self.env.LD_LIBRARY_PATH + [self.path.get_bld().abspath()],
+        #libpath = self.env.LD_LIBRARY_PATH,
+        **kw)
+        
+    return exe
+
 ### ---------------------------------------------------------------------------
 def build_linklib(self, name, source, **kw):
 
@@ -184,14 +252,7 @@ def build_linklib(self, name, source, **kw):
     
     src_node = self.path.find_dir('src')
 
-    srcs = self.path.ant_glob(source)
-    if (not srcs) and src_node:
-        # hack to mimick CMT's default (to take sources from src)
-        srcs = src_node.ant_glob(source)
-        pass
-    if not srcs:
-        self.fatal("could not infer sources from %r" % source)
-        pass
+    srcs = self._cmt_get_srcs_lst(source)
     includes = kw.get('includes', [])
     includes.insert(0, self.path.abspath())
     #includes.insert(1, self.path.abspath()+'/'+PACKAGE_NAME)
@@ -266,7 +327,10 @@ def build_linklib(self, name, source, **kw):
 
     #o.post()
     return o
+
+### ---------------------------------------------------------------------------
 import waflib.Build
+waflib.Build.BuildContext.build_app = build_app
 waflib.Build.BuildContext.build_linklib = build_linklib
 waflib.Build.BuildContext.install_headers = install_headers
 ### ---------------------------------------------------------------------------
