@@ -294,9 +294,11 @@ def build_linklib(self, name, source, **kw):
     defines = _defines + defines
     kw['defines'] = defines + self._get_pkg_version_defines()
 
+    kw['features'] = waflib.Utils.to_list(kw.get('features', [])) + [
+        'cxx', 'cxxshlib', 'symlink_tsk',
+        ]
     #msg.info ("==> build_linklib(%s, '%s', %r)..." % (name, source, kw))
     o = self(
-        features        = 'cxx cxxshlib symlink_tsk',
         name            = name,
         source          = srcs,
         target          = name,
