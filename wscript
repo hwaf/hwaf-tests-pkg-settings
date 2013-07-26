@@ -160,8 +160,8 @@ def build_app(self, name, source, **kw):
         return
 
     kw['features'] = waflib.Utils.to_list(
-        kw.get('features', 'cxx cxxprogram')) + [
-        'symlink_tsk',
+        kw.get('features', '')) + [
+        'cxx', 'cxxprogram', 'symlink_tsk',
         ]
     
     kw['use'] = waflib.Utils.to_list(kw.get('use', []))
