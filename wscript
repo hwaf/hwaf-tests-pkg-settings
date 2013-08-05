@@ -158,7 +158,7 @@ def build_app(self, name, source, **kw):
     kw['linkflags'] = linkflags
 
     defines = waflib.Utils.to_list(kw.get('defines', []))
-    kw['defines'] = defines + _get_pkg_version_defines(self)
+    kw['defines'] = defines + self._get_pkg_version_defines()
     
     includes = waflib.Utils.to_list(kw.get('includes', []))
     includes.insert(0, self.path.abspath())
@@ -166,7 +166,7 @@ def build_app(self, name, source, **kw):
     kw['includes'] = includes + [src_node]
 
     # extract package name
-    PACKAGE_NAME = _get_pkg_name(self)
+    PACKAGE_NAME = self._get_pkg_name()
 
     exe = self(
         name=name,
