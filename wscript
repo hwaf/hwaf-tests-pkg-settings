@@ -2,6 +2,11 @@
 
 import waflib.Logs as msg
 
+PACKAGE = {
+    'name': 'pkg-settings',
+    'author': 'mana collaboration',
+}
+
 def pkg_deps(ctx):
     return
 
