@@ -165,13 +165,14 @@ def build_app(self, name, source, **kw):
     #includes.insert(1, self.path.abspath()+'/'+PACKAGE_NAME)
     kw['includes'] = includes + [src_node]
 
+    kw['target'] = kw.get('target', name+".exe")
+    
     # extract package name
     PACKAGE_NAME = self._get_pkg_name()
 
     exe = self(
         name=name,
         source=srcs,
-        target=name+'.exe',
         install_path='${INSTALL_AREA}/bin',
         libpath = self.env.LD_LIBRARY_PATH + [self.path.get_bld().abspath()],
         #libpath = self.env.LD_LIBRARY_PATH,
@@ -224,6 +225,7 @@ def build_linklib(self, name, source, **kw):
     kw['includes'].extend(kw['export_includes'])
     
     kw['use'] = waflib.Utils.to_list(kw.get('use', [])) + ['dl']
+    kw['target'] = kw.get('target', name)
     
     defines = kw.get('defines', [])
     _defines = []
@@ -242,7 +244,6 @@ def build_linklib(self, name, source, **kw):
     o = self(
         name            = name,
         source          = srcs,
-        target          = name,
         install_path    = '${INSTALL_AREA}/lib',
         #export_includes = ['.', './'+PACKAGE_NAME],
         #export_includes = export_,
